@@ -84,7 +84,7 @@ single real race and never across different races.
 ## 5. Installation
 
 1. Open RotorHazard and go to **Plugins → Upload**.
-2. Select the release asset `all_results_exporter_v1.1.1.zip` and upload it.
+2. Select the release asset `all_results_exporter.zip` and upload it.
 3. Restart RotorHazard when prompted.
 4. The exporter appears under **Data Management → Exporter** as
    **Export All Results (XLSX)**.

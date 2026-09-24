@@ -65,7 +65,7 @@ RotorHazard 自带的导出是 JSON，数据完整但普通人不方便打开和
 ## 安装流程
 
 1. 打开 RotorHazard，进入 **插件 → 上传**。
-2. 选择 Release 附件 `all_results_exporter_v1.1.1.zip` 上传。
+2. 选择 Release 附件 `all_results_exporter.zip` 上传。
 3. 按提示重启 RotorHazard。
 4. 在 **数据管理 → 导出器** 中出现 **Export All Results (XLSX)**。
 

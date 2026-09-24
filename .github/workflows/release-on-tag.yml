@@ -1,0 +1,197 @@
+name: Release on Tag
+
+on:
+  push:
+    tags:
+      - v*.*.*
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (for example, v1.1.1)
+        required: true
+        default: v1.1.1
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-package:
+    name: Validate and Package
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+      asset: ${{ steps.meta.outputs.asset }}
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Resolve and validate release metadata
+        id: meta
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG="$DISPATCH_TAG"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$'; then
+            echo "::error::Invalid release tag: $TAG" >&2
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+          MANIFEST='custom_plugins/all_results_exporter/manifest.json'
+          MANIFEST_VERSION=$(python3 -c "import json; print(json.load(open('$MANIFEST'))['version'])")
+          ASSET=$(python3 -c "import json; print(json.load(open('$MANIFEST'))['zip_filename'])")
+
+          if [ "$MANIFEST_VERSION" != "$VERSION" ]; then
+            echo "::error::Manifest version '$MANIFEST_VERSION' does not match tag '$TAG'" >&2
+            exit 1
+          fi
+          if ! printf '%s' "$ASSET" | grep -Eq '^[A-Za-z0-9._-]+\.zip$'; then
+            echo "::error::Unsafe or invalid zip_filename: $ASSET" >&2
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
+
+      - name: Run RHFest validation
+        uses: RotorHazard/rhfest-action@v3.2.3
+
+      - name: Validate manifest JSON
+        run: |
+          python3 -m json.tool custom_plugins/all_results_exporter/manifest.json >/dev/null
+          echo "manifest JSON valid"
+
+      - name: Byte-compile plugin source
+        run: |
+          python3 -m py_compile custom_plugins/all_results_exporter/__init__.py
+          echo "plugin compiles"
+
+      - name: Run regression tests
+        run: |
+          python -m pip install --quiet --upgrade pip
+          python -m pip install --quiet openpyxl pytest
+          python -m pytest tests -q
+
+      - name: Clean generated metadata
+        run: |
+          find custom_plugins -name "__pycache__" -type d -prune -exec rm -rf {} +
+          find custom_plugins -name "*.py[cod]" -delete
+          find custom_plugins -name ".DS_Store" -delete
+          find custom_plugins -name "._*" -delete
+
+      - name: Create and verify plugin archive
+        env:
+          ASSET: ${{ steps.meta.outputs.asset }}
+        run: |
+          cd custom_plugins
+          zip -r -X "../$ASSET" all_results_exporter
+          cd ..
+
+          unzip -t "$ASSET"
+          if unzip -Z1 "$ASSET" | grep -vE '^all_results_exporter/'; then
+            echo "::error::ZIP contains entries outside all_results_exporter/" >&2
+            exit 1
+          fi
+          if unzip -Z1 "$ASSET" | grep -Eq '__pycache__|\.pyc$|\.DS_Store|(^|/)\._|(^|/)\.git/|(^|/)tests/|(^|/)\.github/'; then
+            echo "::error::ZIP contains generated metadata or repository-only files" >&2
+            exit 1
+          fi
+
+      - name: Generate checksum and release notes
+        env:
+          ASSET: ${{ steps.meta.outputs.asset }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          sha256sum "$ASSET" | tee SHA256SUMS.txt
+          SHA=$(awk '{print $1}' SHA256SUMS.txt)
+
+          cat > RELEASE_NOTES.md << EOF
+          ## All Results Exporter $TAG
+
+          First public stable release.
+
+          ### Highlights
+          - One-click export of **every saved race** in an event to a single Excel (.xlsx) workbook
+          - Per-pilot lap times expanded into columns
+          - Race-time frequencies read from the saved records
+          - Fully empty columns are hidden automatically
+          - Class / heat / round cells merge only within each real race boundary
+          - Unassigned empty seats produce no result rows
+          - Formula-injection protection: names starting with \`=\` stay as text
+          - Runs on demand; no background polling or scheduled tasks
+
+          ### Verified on
+          - RotorHazard v4.4.0 / RHAPI 1.4
+          - Raspberry Pi 4 Model B Rev 1.5, Python 3.13.5, openpyxl 3.1.5
+          - Real event: 10 saved races, 30 pilot rows, export about 0.2 s
+
+          ### Known verification boundaries
+          - Hole Shot verified cell-by-cell against real hardware races
+          - First Lap / Staggered Start verified with RotorHazard's real scoring code using injected lap times (not real flights)
+          - The web plugin-upload button was not clicked in the original test; equivalent CLI installation plus real export were used
+
+          ### Install
+          1. Open **Plugins -> Upload** and choose \`$ASSET\`, then restart RotorHazard.
+          2. Open **Data Management -> Exporter -> Export All Results (XLSX)**.
+
+          ### SHA-256
+          \`$SHA  $ASSET\`
+
+          See the attached \`SHA256SUMS.txt\` file.
+
+          ---
+
+          ### 中文摘要
+          首个公开稳定版本：一键把整场赛事全部已保存比赛汇总为单个 Excel，包含逐圈时间与比赛时实际频点；自动隐藏空列、按场次边界合并、过滤空赛道位，并防止 Excel 公式注入。已在 RotorHazard v4.4.0 / RHAPI 1.4、树莓派 4、Python 3.13.5、openpyxl 3.1.5 实机验证（10 场、30 行、约 0.2 秒）。First Lap / Staggered Start 使用真实计分代码加注入圈速验证，非实际飞行。
+          EOF
+
+      - name: Store verified release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: |
+            ${{ steps.meta.outputs.asset }}
+            SHA256SUMS.txt
+            RELEASE_NOTES.md
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish Release
+    needs: validate-and-package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified release bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: release-bundle
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.validate-and-package.outputs.tag }}
+          ASSET: ${{ needs.validate-and-package.outputs.asset }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ASSET" SHA256SUMS.txt --clobber
+            gh release edit "$TAG" \
+              --title "All Results Exporter $TAG" \
+              --notes-file RELEASE_NOTES.md
+          else
+            gh release create "$TAG" "$ASSET" SHA256SUMS.txt \
+              --verify-tag \
+              --title "All Results Exporter $TAG" \
+              --notes-file RELEASE_NOTES.md
+          fi

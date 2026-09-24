@@ -1,0 +1,21 @@
+name: RHFest
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validation:
+    name: Validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v5
+
+      - name: 🚀 Run RHFest validation
+        uses: RotorHazard/rhfest-action@v3.2.3

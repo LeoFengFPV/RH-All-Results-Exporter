@@ -1,0 +1,83 @@
+name: Bug report
+description: Report a problem with All Results Exporter
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please complete the
+        details below and remove any private information.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Tell us what happened, and what you expected to happen.
+      placeholder: |
+        1. In this situation...
+        2. The export showed...
+        3. I expected...
+    validations:
+      required: true
+
+  - type: input
+    id: rh-version
+    attributes:
+      label: RotorHazard version
+      placeholder: e.g. 4.4.0
+    validations:
+      required: true
+
+  - type: input
+    id: rhapi-version
+    attributes:
+      label: RHAPI version
+      placeholder: e.g. 1.4
+    validations:
+      required: true
+
+  - type: input
+    id: openpyxl-version
+    attributes:
+      label: openpyxl version
+      placeholder: e.g. 3.1.5
+    validations:
+      required: false
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware / operating system
+      placeholder: e.g. Raspberry Pi 4 Model B, Raspberry Pi OS
+    validations:
+      required: false
+
+  - type: dropdown
+    id: start-behavior
+    attributes:
+      label: Race start format
+      options:
+        - Hole Shot
+        - First Lap
+        - Staggered Start
+        - Not sure / other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any error log. Remember to remove names, IPs and tokens.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have removed private data (pilot names, IP addresses, tokens) from this report
+          required: true

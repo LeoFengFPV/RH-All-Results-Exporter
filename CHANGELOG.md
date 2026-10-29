@@ -1,27 +1,34 @@
-# Changelog
+# 更新日志
 
-All notable changes to this project are documented in this file.
-The format is based on [Keep a Changelog](https://keepachangelog.com/),
-and this project follows [Semantic Versioning](https://semver.org/).
+本项目的重要变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/)，
+版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
+
+## [1.1.2] - 2026-10-29
+
+### 变更
+
+- 面向用户的文案改为**仅简体中文**：插件名称、导出器菜单名、manifest 描述。
+- 导出器在 RotorHazard 中显示为 **导出全部成绩 (XLSX)**。
+- 仓库默认文档改为简体中文（英文说明见 `README_EN.md`）。
 
 ## [1.1.1] - 2026-09-23
 
-First public stable release.
+首个公开稳定版本。
 
-### Added
+### 新增
 
-- One-click export of **every saved race** to a single formatted XLSX workbook.
-- One row per pilot per race, with per-lap times expanded into columns.
-- Race-time **frequency** read from the saved records.
-- Automatic hiding of fully empty columns.
-- Class / heat / round cells merged only within each real race boundary.
-- Unassigned empty-seat filtering.
-- Formula-injection protection (callsigns starting with `=` stay as text).
-- RHFest validation workflow.
-- Tag-triggered release workflow with SHA-256 checksums.
-- Automated regression tests under `tests/`.
+- 一键把**全部已保存比赛**导出为单个排版好的 XLSX。
+- 每场每位飞手一行，逐圈时间按列展开。
+- 读取比赛时保存的**频点**。
+- 全空列自动隐藏。
+- 类别 / 分组 / 轮次仅在同一场实际比赛边界内合并。
+- 过滤未分配飞手的空赛道位。
+- 防止公式注入（以 `=` 开头的呼号按文本保存）。
+- RHFest 校验工作流。
+- Tag 触发的 Release 工作流（含 SHA-256 校验和）。
+- `tests/` 下的自动化回归测试。
 
-### Verified
+### 已验证
 
-- RotorHazard v4.4.0 / RHAPI 1.4 on a Raspberry Pi 4 Model B.
-- Real event: 10 saved races, 30 pilot rows, export ~0.2 s.
+- RotorHazard v4.4.0 / RHAPI 1.4，树莓派 4 Model B。
+- 真实赛事：10 场已保存比赛、30 行飞手数据，导出约 0.2 秒。

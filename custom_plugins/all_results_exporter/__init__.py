@@ -246,7 +246,7 @@ def write_excel(payload):
 
 def register_handlers(args):
     args["register_fn"](DataExporter(
-        "导出全部成绩 (XLSX)", write_excel, assemble_all_results,
+        "Export All Results (XLSX)", write_excel, assemble_all_results,
         name="all_results_xlsx"))
 
 

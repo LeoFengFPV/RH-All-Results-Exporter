@@ -1,13 +1,13 @@
 {
     "domain": "all_results_exporter",
-    "name": "全成绩导出",
+    "name": "All Results Exporter",
     "author": "Leo Feng (LeoFengFPV)",
     "author_uri": "https://github.com/LeoFengFPV",
     "license": "MIT",
     "license_uri": "https://github.com/LeoFengFPV/RH-All-Results-Exporter/blob/main/LICENSE",
-    "description": "一键把整场赛事全部已保存比赛、飞手与逐圈时间导出为排版好的 Excel（XLSX）",
+    "description": "Export every saved race, pilot and lap time to one formatted Excel (XLSX) workbook",
     "documentation_uri": "https://github.com/LeoFengFPV/RH-All-Results-Exporter",
-    "version": "1.1.2",
+    "version": "1.1.1",
     "required_rhapi_version": "1.4",
     "dependencies": ["openpyxl"],
     "zip_filename": "all_results_exporter.zip"

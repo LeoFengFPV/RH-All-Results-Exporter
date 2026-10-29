@@ -1,9 +1,8 @@
-<h1 align="center">RotorHazard 全成绩导出插件</h1>
+<h1 align="center">All Results Exporter for RotorHazard</h1>
 
 <p align="center">
-  <b>一键把整场赛事所有已保存比赛、飞手与逐圈时间导出为一个排版好的 Excel。</b><br>
-  界面与导出表头均为<strong>简体中文</strong>。<br>
-  <a href="./README_EN.md">[English]</a>
+  <b>Export every saved race, pilot and lap time to one formatted Excel workbook.</b><br>
+  <a href="./README_CN.md">[🇨🇳 中文文档]</a>
 </p>
 
 <p align="center">
@@ -22,111 +21,157 @@
 
 ---
 
-## 项目背景与痛点
+## 1. Overview
 
-RotorHazard 自带的导出是 JSON，数据完整但普通人不方便打开和阅读；一些社区导出插件只能导出**最后一场**，逼操作员飞一场导一场。本插件解决这个痛点：**一键导出整场赛事**，输出排版好的电子表格，包含逐圈时间和每场比赛时实际使用的频点，方便比赛结尾复核。
+**All Results Exporter** is a RotorHazard plugin that collects **every saved
+race** in an event and writes them into a single Excel (`.xlsx`) workbook, with
+one row per pilot per race and every lap time expanded into its own column. It
+is designed for the end-of-event review, when the race director needs one
+human-readable sheet instead of many JSON files.
 
-## 功能
+## 2. Why this plugin exists
 
-- 一键把**所有已保存比赛**汇总到单个工作表。
-- 每位实际参赛飞手一行。
-- 逐圈时间按列展开（第0圈、第1圈、第2圈……）。
-- 比赛**频点**读取比赛时保存的记录，每位飞手只显示一个。
-- 全空列自动隐藏。
-- 类别、分组、轮次只在同一场实际比赛边界内合并单元格。
-- 未分配飞手的空赛道位不产生成绩行。
-- 以 `=` 开头的飞手名按文本保存，不会变成 Excel 公式。
-- 按需执行，没有后台轮询或定时任务。
-- 插件名称、导出菜单与表格表头均为简体中文。
+RotorHazard's built-in export produces JSON, which is complete but not easy for
+everyone to open and read. Some community exporters only export the **last**
+race, forcing the operator to export after every single race. This plugin
+fills the gap: **one click exports the whole event at once**, in a formatted
+spreadsheet, including per-lap times and the frequency used during each race.
 
-## 导出字段说明
+## 3. Features
 
-| 字段 | 含义 |
+- One-click export of **all saved races** to a single worksheet.
+- One row for every pilot who actually raced.
+- Per-lap times expanded across columns (Lap 0, Lap 1, Lap 2, …).
+- Race-time **frequency** read from the saved record (one frequency per pilot).
+- Fully empty columns are hidden automatically.
+- Class, heat and round cells merge only within each real race boundary.
+- Unassigned empty seats produce no result rows.
+- Names starting with `=` are stored as text, not Excel formulas.
+- Runs on demand — there is no background polling or scheduled task.
+
+## 4. Output columns
+
+The worksheet contains these columns (lap columns are added as needed, and the
+total time is always the last column):
+
+| Column | Meaning |
 |---|---|
-| 类别 | 比赛类别名称 |
-| 分组 | 分组/Heat 名称 |
-| 轮次 | 轮次编号 |
-| 名次 | 完赛名次 |
-| 飞手 | 飞手呼号 |
-| 团队 | 团队名（如有） |
-| 频点 (MHz) | 该场为该飞手保存的频点 |
-| 圈数 | 计圈数量 |
-| 平均圈速 | 平均每圈用时 |
-| 最快圈速 | 最快单圈用时 |
-| 第0圈 … 第N圈 | 每一圈的单独用时 |
-| 总时间 | 总用时（固定为最后一列） |
+| Class | Race class name |
+| Heat | Heat / group name |
+| Round | Round number |
+| Position | Finishing position |
+| Pilot | Pilot callsign |
+| Team | Team name (if any) |
+| Frequency (MHz) | Frequency saved for that pilot in that race |
+| Laps | Number of counted laps |
+| Average Lap | Average lap time |
+| Fastest Lap | Fastest lap time |
+| Lap 0 … Lap N | Each individual lap time |
+| Total Time | Overall time (always the last column) |
 
-圈号与总时间规则：
+Lap numbering and the total-time field follow the race start format:
 
-- **Hole Shot（发令枪）** 与 **Staggered Start（错时发车）** 从**第0圈**开始编号（第0圈为起跑圈）。
-- **First Lap（首圈制）** 从**第1圈**开始编号（没有第0圈）。
-- **Staggered Start** 的总时间取 `total_time_laps`，不含起跑圈。
+- **Hole Shot** and **Staggered Start** number laps from **Lap 0** (Lap 0 is the
+  start/holeshot lap).
+- **First Lap** numbers laps from **Lap 1** (there is no Lap 0).
+- For **Staggered Start**, the total time uses `total_time_laps`, which excludes
+  the start lap.
 
-某列如果整列全空（例如一直没用的类别），就不会导出；类别、分组、轮次只在单场实际比赛内合并，绝不跨场次。
+A column that is empty for every row (for example Class when it is never used)
+is not exported. Class, Heat and Round are merged only inside the boundary of a
+single real race and never across different races.
 
-## 安装流程
+## 5. Installation
 
-1. 打开 RotorHazard，进入 **插件 → 上传**。
-2. 选择 Release 附件 `all_results_exporter.zip` 上传。
-3. 按提示重启 RotorHazard。
-4. 在 **数据管理 → 导出器** 中出现 **导出全部成绩 (XLSX)**。
+1. Open RotorHazard and go to **Plugins → Upload**.
+2. Select the release asset `all_results_exporter.zip` and upload it.
+3. Restart RotorHazard when prompted.
+4. The exporter appears under **Data Management → Exporter** as
+   **Export All Results (XLSX)**.
 
-依赖 [openpyxl](https://pypi.org/project/openpyxl/)。也可手动安装：把 `all_results_exporter` 文件夹放到 `~/rh-data/plugins/` 后重启。
+The plugin requires [openpyxl](https://pypi.org/project/openpyxl/). Manual
+install is also possible: place the `all_results_exporter` folder under
+`~/rh-data/plugins/` and restart.
 
-## 使用路径
+## 6. Usage
 
-1. 正常飞行并**保存**比赛。
-2. 赛事（或某一阶段）结束后，打开 **数据管理 → 导出器**。
-3. 选择 **导出全部成绩 (XLSX)** 下载文件。
-4. 用 Excel、WPS 等打开复核。
+1. Fly and **save** your races as usual.
+2. When the event (or a session) is finished, open
+   **Data Management → Exporter**.
+3. Choose **Export All Results (XLSX)** and download the file.
+4. Open it in Excel, WPS or any spreadsheet application to review.
 
-导出范围仅包含**已保存比赛**；未保存的比赛或被丢弃的现场圈数据不在范围内。
+Only **saved races** are included. Races that were never saved, or live lap data
+that was discarded, are out of scope.
 
-## 兼容性
+## 7. Compatibility
 
-- 已在 **RotorHazard v4.4.0 / RHAPI 1.4** 测试。
-- 因未测试更低版本，manifest 最低 RHAPI 版本保守设为 **1.4**。
-- 标准环境包含 Python 3 与 `openpyxl` 依赖。
+- Tested on **RotorHazard v4.4.0** with **RHAPI 1.4**.
+- The manifest therefore declares a minimum RHAPI version of **1.4**, because no
+  earlier version was tested.
+- A standard installation includes Python 3 and the `openpyxl` dependency.
 
-## 已验证内容
+## 8. Verified test results
 
-树莓派真实环境：
+Real-hardware verification (Raspberry Pi):
 
 - RotorHazard v4.4.0 / RHAPI 1.4
-- Raspberry Pi 4 Model B Rev 1.5、Python 3.13.5、openpyxl 3.1.5
-- 真实赛事：**10 场已保存比赛、30 行飞手数据**
-- 导出约 **0.2 秒**，页面响应正常
-- Hole Shot 成绩对照真实硬件比赛逐格核对通过
+- Raspberry Pi 4 Model B Rev 1.5, Python 3.13.5, openpyxl 3.1.5
+- Real event: **10 saved races, 30 pilot rows**
+- Export took about **0.2 seconds**, page stayed responsive
+- Hole Shot results were checked cell-by-cell against real hardware races
 
-`tests/` 下的自动化回归测试覆盖重名飞手、空赛道位、占位行、删圈、三种起跑方式、合并边界、公式型飞手名与文件重开，全部通过。
+Automated regression tests (`tests/`), covering duplicate callsigns, empty
+seats, placeholders, deleted laps, all three start formats, merge boundaries,
+formula-like names and workbook re-opening, all pass.
 
-## 已知限制
+## 9. Known limitations
 
-- **First Lap** 与 **Staggered Start** 使用 RotorHazard **真实计分代码**验证，但圈速来自临时注入数据，并非实际飞行；首次在正式赛事使用这两种赛制时，请再核对起始圈号与总时间列。
-- 原测试环境中**没有直接点击网页「插件上传」按钮**，而是用等效命令行安装加真实导出验证加载与输出。
-- 未分配飞手的空赛道位（有模块频点、无飞手、无圈速）会被省略；这是给人看的成绩表的有意设计，尽管原生 JSON 备份会保留这些条目。
+- **First Lap** and **Staggered Start** were verified using RotorHazard's real
+  scoring code, but the lap times came from temporarily injected data rather
+  than real flights. When you first use these formats in a real event, please
+  double-check the starting lap number and the total-time column.
+- In the original test environment the web **"plugin upload" button was not
+  clicked directly**; an equivalent command-line install plus a real export were
+  used to verify loading and output.
+- Unassigned seats (a module frequency with no pilot and no laps) are omitted;
+  this is intentional for a human-readable result sheet, even though the native
+  JSON backup keeps those entries.
 
-## 性能说明
+## 10. Performance notes
 
-- 真实赛事规模（10 场 / 30 行）：约 **0.2 秒**，内存增量可忽略，页面响应正常。
-- 约 **4,000 行**的模拟压力测试（mock 数据，**非真实赛事**）约 **19.6 秒**；大型赛事请在非计时阶段导出。
-- 不宣称零资源占用，时间与内存随已保存比赛和圈数增长。
+- Real event scale (10 races / 30 rows): roughly **0.2 s**, negligible memory
+  increase, normal page response.
+- A simulated stress test of about **4,000 rows** (mock data, **not** a real
+  event) took about **19.6 s**. For large events, export during a non-timing
+  period.
+- The plugin does not claim zero resource use; time and memory grow with the
+  number of saved races and laps.
 
-## 故障排查
+## 11. Troubleshooting
 
-- **没有出现下载**：可能没有已保存比赛，或出现内部错误，请查看 RotorHazard 日志。
-- **少了某位飞手**：确认该场已保存且该赛道位分配了飞手；空赛道位会被有意跳过。
-- **少了某一圈**：被删除的圈不会导出；若手动删圈或补圈，请重新核对已保存比赛。
-- **文件打不开**：确认下载完整，且计时器已安装 openpyxl。
+- **No download appears:** there may be no saved races, or an internal error was
+  logged. Check the RotorHazard log for details.
+- **A pilot is missing:** confirm the race was saved and that a pilot was
+  assigned to that seat; empty seats are skipped by design.
+- **A lap is missing:** deleted laps are not exported. Re-check saved races if a
+  lap was removed or added manually.
+- **File will not open:** ensure the download completed and openpyxl is
+  installed on the timer.
 
-## 隐私说明
+## 12. Privacy
 
-仓库与 Release 不含真实比赛数据库、客户资料、飞手真实姓名、局域网 IP、日志、账号、Token 或 Cookie。示例数据与截图使用匿名飞手（如 **Pilot A**、**Pilot B**）。发布包在上传前会清理缓存与元数据。
+The repository and release contain no real race databases, customer details,
+real pilot names, local IP addresses, logs, credentials, tokens or cookies.
+Sample data and screenshots use anonymous pilots such as **Pilot A** and
+**Pilot B**. Release packages are cleaned of caches and metadata before
+uploading.
 
-## 开源协议
+## 13. License
 
-基于 [MIT 协议](./LICENSE)开源。
+Released under the [MIT License](./LICENSE).
 
-## 参与贡献
+## 14. Contributing
 
-欢迎提交 Issue 与 Pull Request。反馈问题时请注明 RotorHazard / RHAPI 版本，并去除日志中的隐私信息。
+Issues and pull requests are welcome. When filing a bug report, please include
+the RotorHazard/RHAPI versions and remove any private information from logs.

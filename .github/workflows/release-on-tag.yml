@@ -116,35 +116,43 @@ jobs:
           SHA=$(awk '{print $1}' SHA256SUMS.txt)
 
           cat > RELEASE_NOTES.md << EOF
-          ## 全成绩导出 $TAG
+          ## All Results Exporter $TAG
 
-          ### 亮点
-          - 一键把整场赛事**全部已保存比赛**汇总为单个 Excel（.xlsx）
-          - 逐圈时间按列展开；频点取比赛时保存值
-          - 全空列自动隐藏；类别 / 分组 / 轮次仅在场次边界内合并
-          - 空赛道位不产生成绩行；以 \`=\` 开头的呼号按文本保存
-          - 插件界面与导出表头均为**简体中文**
-          - 导出器菜单名：**导出全部成绩 (XLSX)**
-          - 按需执行，无后台轮询
+          First public stable release.
 
-          ### 已验证
+          ### Highlights
+          - One-click export of **every saved race** in an event to a single Excel (.xlsx) workbook
+          - Per-pilot lap times expanded into columns
+          - Race-time frequencies read from the saved records
+          - Fully empty columns are hidden automatically
+          - Class / heat / round cells merge only within each real race boundary
+          - Unassigned empty seats produce no result rows
+          - Formula-injection protection: names starting with \`=\` stay as text
+          - Runs on demand; no background polling or scheduled tasks
+
+          ### Verified on
           - RotorHazard v4.4.0 / RHAPI 1.4
-          - 树莓派 4 Model B Rev 1.5，Python 3.13.5，openpyxl 3.1.5
-          - 真实赛事：10 场、30 行，导出约 0.2 秒
+          - Raspberry Pi 4 Model B Rev 1.5, Python 3.13.5, openpyxl 3.1.5
+          - Real event: 10 saved races, 30 pilot rows, export about 0.2 s
 
-          ### 验证边界
-          - Hole Shot 对照真实硬件比赛逐格核对
-          - First Lap / Staggered Start 使用真实计分代码 + 注入圈速验证（非实际飞行）
-          - 原测试未直接点击网页「插件上传」按钮，使用等效命令行安装 + 真实导出验证
+          ### Known verification boundaries
+          - Hole Shot verified cell-by-cell against real hardware races
+          - First Lap / Staggered Start verified with RotorHazard's real scoring code using injected lap times (not real flights)
+          - The web plugin-upload button was not clicked in the original test; equivalent CLI installation plus real export were used
 
-          ### 安装
-          1. 打开 **插件 → 上传**，选择 \`$ASSET\`，然后重启 RotorHazard。
-          2. 打开 **数据管理 → 导出器 → 导出全部成绩 (XLSX)**。
+          ### Install
+          1. Open **Plugins -> Upload** and choose \`$ASSET\`, then restart RotorHazard.
+          2. Open **Data Management -> Exporter -> Export All Results (XLSX)**.
 
           ### SHA-256
           \`$SHA  $ASSET\`
 
-          详见附件 \`SHA256SUMS.txt\`。
+          See the attached \`SHA256SUMS.txt\` file.
+
+          ---
+
+          ### 中文摘要
+          首个公开稳定版本：一键把整场赛事全部已保存比赛汇总为单个 Excel，包含逐圈时间与比赛时实际频点；自动隐藏空列、按场次边界合并、过滤空赛道位，并防止 Excel 公式注入。已在 RotorHazard v4.4.0 / RHAPI 1.4、树莓派 4、Python 3.13.5、openpyxl 3.1.5 实机验证（10 场、30 行、约 0.2 秒）。First Lap / Staggered Start 使用真实计分代码加注入圈速验证，非实际飞行。
           EOF
 
       - name: Store verified release bundle
@@ -180,11 +188,11 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$ASSET" SHA256SUMS.txt --clobber
             gh release edit "$TAG" \
-              --title "全成绩导出 $TAG" \
+              --title "All Results Exporter $TAG" \
               --notes-file RELEASE_NOTES.md
           else
             gh release create "$TAG" "$ASSET" SHA256SUMS.txt \
               --verify-tag \
-              --title "全成绩导出 $TAG" \
+              --title "All Results Exporter $TAG" \
               --notes-file RELEASE_NOTES.md
           fi
